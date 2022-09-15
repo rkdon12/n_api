@@ -3,7 +3,7 @@ const conn = mysql.createConnection({
 	host: 'localhost',
 	user: 'root',
 	password: 'mag123ato',
-	database: 'api',
+	database: 'epanel',
 	port: '3366'
 });
 
