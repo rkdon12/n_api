@@ -5,7 +5,7 @@ const conn = require('../service/db');
 /**GET ALL ROLES**/
 exports.getAllRoles = (req, res, next) => {
 	conn.query("SELECT * FROM roles", function(err, data, fields) {
-		if(err) return next(new appError(err))
+		if(err) return next(new appError(err));
 		res.status(200).json({
 			status: "success",
 			length: data?.length,
@@ -182,9 +182,7 @@ exports.deleteUser = (req, res, next) =>{
 	if(!req.params.id){
 		return next(new appError("NO User Details Found", 404));
 	}
-	conn.query(
-		"DELETE FROM users WHERE id=?",
-		[req.params.id],
+	conn.query("DELETE FROM users WHERE id=?", [req.params.id],
 		function(err, fields){
 			if(err) return next(new appError(err, 500));
 			res.status(201).json({
@@ -194,3 +192,112 @@ exports.deleteUser = (req, res, next) =>{
 		}
 	);
 };
+/**END USERS TABLE**/
+
+/**START BIO TABLE**/
+/**GET ALL BIOs**/
+exports.getAllBio = (req, res, next) =>{
+	conn.query("SELECT * FROM bio", function(err, data, fields){
+		if(err) return next(new appError(err));
+		res.status(200).json({
+			status: "success",
+			length: data?.length,
+			data:data,
+		});
+	});
+};
+
+/**ADD DATA TO BIO**/
+exports.createBio = (req, res, next) => {
+	if(!req.body) return next(new appError("No Form Data Found", 404));
+	const title = req.body.title;
+	const details = req.body.details;
+	const entry_date = req.body.entry_date;
+	conn.query("INSERT INTO bio(title,details,entry_date) VALUES(?,?,?)",
+		[title,details,entry_date], 
+		function(err, data, fields){
+			if(err) return next(new appError(err, 500));
+			res.status(201).json({
+				status: "success",
+				message: "Bio Created!"
+			});
+		}
+	);
+};
+
+/**GET BIO PER ID**/
+exports.getBio = (req, res, next) => {
+	if(!req.params.id){
+		return next(new appError("No Bio Details Found", 404));
+	}
+	conn.query("SELECT * FROM bio WHERE id=?",[req.params.id],
+		function(err, data, fields){
+			if(err) return next(new appError(err, 500));
+			res.status(200).json({
+				status: "success",
+				length: data?.length,
+				data:data
+			});
+		}
+	);
+};
+
+/**UPDATE BIO PER ID**/
+exports.updateBio = (req, res, next) => {
+	if(!req.params.id){
+		return next(new appError("No Bio Details Found", 404));
+	}
+	const title = req.body.title;
+	const details = req.body.details;
+	const last_updated = req.body.last_updated;
+	conn.query("UPDATE bio SET title=?,details=?,last_updated=? WHERE id=?",[title,details,last_updated,req.params.id],
+		function(err, data, fields){
+			if (err) return next(new appError(err, 500));
+			res.status(201).json({
+				status: "success",
+				message: "Bio Details Updated!"
+			});
+		}
+	);
+};
+
+/**DELETE BIO PER ID**/
+exports.deleteBio = (req, res, next) =>{
+	if(!req.params.id){
+		return next(new appError("No Bio Details Found", 404));
+	}
+	conn.query("DELETE FROM bio WHERE id=?",[req.params.id],
+		function(err, data, fields) {
+			if (err) return next(new appError(err, 500));
+			res.status(201).json({
+				status: "success",
+				message: "Bio Details Deleted!"
+			});
+		}
+	);
+};
+
+/**END BIO TABLE**/
+
+/**START VALUES TABLE**/
+
+/**END VALUES TABLE**/
+
+/**START SERVICES TABLE**/
+
+/**END SERVICES TABLE**/
+
+
+/**START SOCIAL TABLE**/
+
+/**END SOCIAL TABLE**/
+
+
+/**START SLIDES TABLE**/
+
+/**END SLIDES TABLE**/
+
+/**START SLIDES TABLE**/
+
+/**END SLIDES TABLE**/
+
