@@ -1,11 +1,11 @@
-const appError = require('../utils/appError');
-const conn = require('../service/db');
+var appError = require('../utils/appError');
+var conn = require('../service/db');
 
 /**START ROLES**/
 /**GET ALL ROLES**/
 exports.getAllRoles = (req, res, next) => {
 	conn.query("SELECT * FROM roles", function(err, data, fields) {
-		if(err) return next(new appError(err));
+		if(err) return next(new appError(err,500));
 		res.status(200).json({
 			status: "success",
 			length: data?.length,
@@ -15,7 +15,7 @@ exports.getAllRoles = (req, res, next) => {
 };
 
 /**CREATE ROLES**/
-exports.createRoles = (req, res, next) =>{
+exports.createRoles = (req, res, next) => {
 	if(!req.body) return next(new appError("No Form Data Found", 404));
 	const role_name = req.body.role_name;
 	const entry_date = req.body.entry_date;
@@ -88,14 +88,14 @@ exports.deleteRole = (req, res, next) => {
 /**END ROLES TABLE**/
 
 /**START ROLES-USERS TABLE**/
-/**GET ALL USERROLES**/
+/**GET ALL USER-ROLES**/
 /**END ROLES-USERS TABLE**/
 
 /**START USERS TABLE**/
 /**GET ALL USERS**/
 exports.getAllUsers = (req, res, next) => {
 	conn.query("SELECT * FROM users", function (err, data, fields) {
-		if(err) return next(new appError(err))
+		if(err) return next(new appError(err, 500));
 		res.status(200).json({
 			status: "success",
 			length: data?.length,
@@ -198,7 +198,7 @@ exports.deleteUser = (req, res, next) =>{
 /**GET ALL BIOs**/
 exports.getAllBio = (req, res, next) =>{
 	conn.query("SELECT * FROM bio", function(err, data, fields){
-		if(err) return next(new appError(err));
+		if(err) return next(new appError(err, 500));
 		res.status(200).json({
 			status: "success",
 			length: data?.length,
@@ -250,9 +250,10 @@ exports.updateBio = (req, res, next) => {
 	const title = req.body.title;
 	const details = req.body.details;
 	const last_updated = req.body.last_updated;
-	conn.query("UPDATE bio SET title=?,details=?,last_updated=? WHERE id=?",[title,details,last_updated,req.params.id],
+	conn.query("UPDATE bio SET title=?,details=?,last_updated=? WHERE id=?",
+	[title,details,last_updated,req.params.id],
 		function(err, data, fields){
-			if (err) return next(new appError(err, 500));
+			if(err) return next(new appError(err, 500));
 			res.status(201).json({
 				status: "success",
 				message: "Bio Details Updated!"
@@ -268,7 +269,7 @@ exports.deleteBio = (req, res, next) =>{
 	}
 	conn.query("DELETE FROM bio WHERE id=?",[req.params.id],
 		function(err, data, fields) {
-			if (err) return next(new appError(err, 500));
+			if(err) return next(new appError(err, 500));
 			res.status(201).json({
 				status: "success",
 				message: "Bio Details Deleted!"
@@ -280,24 +281,577 @@ exports.deleteBio = (req, res, next) =>{
 /**END BIO TABLE**/
 
 /**START VALUES TABLE**/
+/**GET ALL CORE VALUES**/
+exports.getAllValues = (req, res, next) => {
+	conn.query("SELECT * FROM cores", 
+		function(err, data, fields){
+			if(err) return next(new appError(err, 500));
+			res.status(200).json({
+				status: "success",
+				length: data?.length,
+				data: data
+			});
+		}
+	);
+};
 
+/**ADD DATA TO CORE VALUES**/
+exports.createCore = (req, res, next) => {
+	if(!req.body) return next(new appError("No Form Data Found", 404));
+	const title = req.body.title;
+	const details = req.body.details;
+	const entry_date = req.body.entry_date;
+	conn.query("INSERT INTO cores(title,details,entry_date) VALUES(?,?,?)", 
+	[title,details,entry_date], 
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			message: "Core Value Created!"
+		});
+
+	});
+};
+
+/**GET CORE VALUE PER ID**/
+exports.getCore = (req, res, next) => {
+	if(!req.params.id){
+		return next(new appError("No Core Value Details Found", 404));
+	}
+	conn.query("SELECT * FROM cores where id=?", [req.params.id],
+	function(err, data, fields){
+		if(err) return next(new appError(err,500));
+		res.status(201).json({
+			status: "success",
+			length: data?.length,
+			data: data
+		});
+	});
+};
+
+/**UPDATE CORE VALUE PER ID**/
+exports.updateCore = (req, res, next) =>{
+	if(!req.params.id){ 
+		return next(new appError("No Core Value Details Found", 404));
+	}
+	let title = req.body.title;
+	let details = req.body.details;
+	let last_updated = req.body.last_updated;
+	conn.query("UPDATE cores SET title=?,details=?,last_updated=? WHERE id=?",
+	[title,details,last_updated,req.params.id],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			message: "Core Value Details Updated!"
+		});
+	});
+};
+
+/**DELETE CORE VALUE PER ID**/
+exports.deleteCore = (req, res, next) => {
+	if(!req.params.id){
+		return next(new appError("No Core Value Details Found", 404));
+	}
+	conn.query("DELETE FROM cores WHERE id=?",[req.params.id],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			message: "Core Value Details Deleted!"
+		});
+	});
+};
 /**END VALUES TABLE**/
 
 /**START SERVICES TABLE**/
+/**GET ALL SERVICES**/
+exports.getALLServices = (req, res, next) => {
+	conn.query("SELECT * FROM services", function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(200).json({
+			status: "success",
+			length: data?.length,
+			data:data
+		});
 
+	});
+};
+
+/**INSERT DATA TO SERVICE TABLE**/
+exports.createService = (req, res, next) => {
+	if(!req.body) return next(new appError("No Form Data Found", 404));
+	let service_type = req.body.service_type;
+	let content = req.body.content;
+	let entry_date = req.body.entry_date;
+	conn.query("INSERT INTO services(service_type,content,entry_date) VALUES(?,?,?)",
+	[service_type,content,entry_date],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			message: "Service Details Created!"
+		});
+
+	});
+};
+
+/**GET SERVICE DETAILS PER ID**/
+exports.getService = (req, res, next) => {
+	if(!req.params.id){
+		return next(new appError("No Service Details Found!"));
+	}
+	conn.query("SELECT * FROM services WHERE id=?", [req.params.id],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			length: data?.length,
+			data:data
+		});
+
+	});
+};
+
+/**UPDATE SERVICE DETAILS PER ID**/
+exports.updateService = (req, res, next) => {
+	if(!req.params.id){
+		return next(new appError("No Service Details Found!", 404));
+	}
+	let service_type =req.body.service_type;
+	let content = req.body.content;
+	let last_updated = req.body.last_updated;
+	conn.query("UPDATE services SET service_type=?,content=?,last_updated=? WHERE id=?",
+	[service_type,content,last_updated,req.params.id],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			message: "Service Details Updated!"
+		});
+	});
+};
+
+/**DELETE SERVICE DETAILS PER ID**/
+exports.deleteService = (req, res, next) => {
+	if(!res.params.id){
+		return next(new appError("No Service Details Found", 404));
+	}
+	conn.query("DELETE FROM services WHERE id=?",[req.params.id], 
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			message: "Service Details Deleted!"
+		});
+
+	});
+};
 /**END SERVICES TABLE**/
 
-
 /**START SOCIAL TABLE**/
+/**GET ALL SOCIAL LINKS DATA**/
+exports.getAllSocial = (req, res, next) => {
+	conn.query("SELECT * FROM social", 
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(200).json({
+			status: "success",
+			length: data?.length,
+			data:data
+		});
+	});
+};
 
+/**INSERT SOCIAL LINK**/
+exports.createSocial = (req, res, next) => {
+	if(!req.body) return next(new appError("No Form Data Found", 404));
+	let social_type = req.body.social_type;
+	let slink = req.body.slink;
+	let social_icon = req.body.social_icon;
+	let entry_date = req.body.entry_date;
+	conn.query("INSERT INTO social(social_type,slink,social_icon,entry_date) VALUES(?,?,?,?)",
+	[social_type,slink,social_icon,entry_date],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			message: "Social Links Created!"
+		});
+	});
+};
+
+/**GET SOCIAL LINK PER ID**/
+exports.getSocial = (req, res, next) => {
+	if(!req.params.id){
+		return next(new appError("No Social Details Found!", 404));
+	}
+	conn.query("SELECT * FROM social WHERE id=?", [req.params.id],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			length:data?.length,
+			data:data
+		});
+	});
+};
+
+/**UPDATE SOCIAL LINK PER ID**/
+exports.updateSocial = (req, res, next) => {
+	if(!req.params.id){
+		return next(new appError("No Social Details Found!", 404));
+	}
+	let social_type = req.body.social_type;
+	let slink = req.body.slink;
+	let social_icon = req.body.social_icon;
+	let last_updated = req.body.last_updated;
+	conn.query("UPDATE social SET social_type=?,slink=?,social_icon=?,last_updated=? WHERE id=?",
+	[social_type,slink,social_icon,last_updated,req.params.id],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			message: "Social Details Updated!"
+		});
+	});
+};
+
+/**DELETE SOCIAL LINK PER ID**/
+exports.deleteSocial = (req, res, next) => {
+	if(!req.params.id){
+		return next(new appError("No Social Details Found!", 500));
+	}
+	conn.query("DELETE FROM social WHERE id=?",[req.params.id],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			message: "Social Link Deleted!"
+		});
+	});
+};
 /**END SOCIAL TABLE**/
 
-
 /**START SLIDES TABLE**/
+/**GET ALL SLIDES**/
+exports.getAllSlide = (req, res, next) => {
+	conn.query("SELECT * FROM slides",
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(200).json({
+			status: "success",
+			length:data?.length,
+			data:data
+		});
+	});
+}
 
+/**INSERT SLIDE DATA**/
+exports.createSlide = (req, res, next) => {
+	if(!req.body) return next(new appError("No Form Data Found!", 404));
+	const slides_title = req.body.slides_title;
+	const slides_img =req.body.slides_img;
+	const slides_content =req.body.slides_content;
+	const entry_date = req.body.entry_date;
+	conn.query("INSERT INTO slides(slides_title,slides_img,slides_content,entry_date)",
+	[slides_title,slides_img,slides_content,entry_date], 
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			message: "Slide Created!"
+		});
+	});
+};
+/**GET SLIDE PER ID**/
+exports.getSlide = (req, res, next) => {
+	if(!req,params.id){return next(new appError("No Slide Details Found!",404));}
+	conn.query("SELECT * FROM slides WHERE id=?",[req.params.id],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			length:data?.length,
+			data:data
+		});
+	});
+};
+
+/**UPDATE SLIDE PER ID**/
+exports.updateSlide = (req, res, next) => {
+	if(!req.params.id){ return next(new appError("No Slide Details Found!", 404))}
+	const slides_title = req.body.slides_title;
+	const slides_img = req.body.slides_img;
+	const slides_content = req.body.slides_content;
+	const last_updated = req.body.last_updated;
+	conn.query("UPDATE slides SET slides_title=?,slides_img=?,slides_content=?,last_updated=? WHERE id=?",
+	[slides_title,slides_img,slides_content,last_updated,req.params.id],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			message: "Slide Details Updated!"
+		});
+	});
+};
+
+/**DELETE SLIDE PER ID**/
+exports.deleteSlide = (req, res, next) => {
+	if(!req.params.id){ return next(new appError("No Slide Details Found!", 404));}
+	conn.query("DELETE FROM slides WHERE id=?", [req.params.id],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			message: "Slide Details Deleted!"
+		});
+	});
+};
 /**END SLIDES TABLE**/
 
-/**START SLIDES TABLE**/
+/**START NEWS TABLE**/
+/**GET ALL NEWS**/
+exports.getAllNews = (req, res, next) => {
+	conn.query("SELECT * FROM news", 
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(200).json({
+			status: "success",
+			length:data?.length,
+			data:data
+		});
+	});
+};
 
-/**END SLIDES TABLE**/
+/**INSERT NEWS**/
+exports.createNews = (req, res, next) => {
+	if(!req.body) return next(new appError("No Form Data Found!", 404));
+	const news_type = req.body.news_type;
+	const content = req.body.content;
+	const entry_date = req.body.entry_date;
+	conn.query("INSERT INTO news(news_type,content,entry_date) VALUES(?,?,?)",
+	[news_type,content,entry_date],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			message: "News Details Created!"
+		})
+	});
+};
+
+/**UPDATE NEWS PER ID**/
+exports.updateNews = (req, res, next) => {
+	if(!req.params.id){ return next(new appError("No News Details Found!", 404))}
+	const news_type = req.body.news_type;
+	const content = req.body.content;
+	const last_updated = req.body.last_updated;
+	conn.query("UPDATE news SET news_type=?,content=?,last_updated=? WHERE id=?",
+	[news_type,content,last_updated,req.params.id],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			message: "News Details Updated"
+		});
+
+	});
+};
+
+/**GET NEWS PER ID**/
+exports.getNews = (req, res, next) => {
+	if(!req.params.id){ return next(new appError("No News Details Found!", 404));}
+	conn.query("SELECT * FROM news WHERE id=?",[req.params.id],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			length:data?.length,
+			data:data
+		});
+	});
+};
+
+/**DELETE NEWS PER ID**/
+exports.deleteNews = (req, res, next) => {
+	if(!req.params.id){ return next(new appError("No News Details Found!", 404))}
+	conn.query("DELETE FROM news WHERE id=?",[req.params.id],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			message: "News Details Deleted!"
+		});
+	});
+};
+
+/**END NEWS TABLE**/
+
+/**START CONTACT TABLE**/
+/**GET ALL CONTACT DETAILS**/
+exports.getAllContacts = (req, res, next) => {
+	conn.query("SELECT * FROM contact",
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(200).json({
+			status: "success",
+			length:data?.length,
+			data:data
+		});
+	});
+};
+
+/**INSERT CONTACT DETAILS**/
+exports.createContact = (req, res, next) => {
+	if(!req.body) return next(new appError("NO Form Data Found!", 404));
+	const contact_type = req.body.contact_type;
+	const contact_icon = req.body.contact_icon;
+	const contact_details = req.body.contact_details;
+	const entry_date = req.body.entry_date;
+	conn.query("INSERT INTO contact(contact_type,contact_icon,contact_details,entry_Date) VALUES(?,?,?,?)",
+	[contact_type,contact_icon,contact_details,entry_date],
+	function(err, data, fields){
+		if(err) return next(new appError(err,500));
+		res.status(201).json({
+			status: "success",
+			message: "Contact Details Created!"
+		});
+	});
+};
+
+/**GET CONTACT PER ID**/
+exports.getContact = (req, res, next) => {
+	if(!req.params.id){ return next(new appError("No Contact Details Found!", 404));}
+	conn.query("SELECT * FROM contact WHERE id=?",[req.params.id],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			length:data?.length,
+			data:data
+		});
+	});
+};
+
+/**UPDATE CONTACT DETAILS PER ID**/
+exports.updateContact = (req, res, next) => {
+	if(!req.params.id){ return next(new appError("No Contact Details Found!", 404));}
+	const contact_type = req.body.contact_type;
+	const contact_icon = req.body.contact_icon;
+	const contact_details = req.body.contact_details;
+	const last_updated = req.body.last_updated;
+	conn.query("UPDATE contact SET contact_type=?,contact_icon=?,contact_details=?,last_updated=? WHERE id=?",
+	[contact_type,contact_icon,contact_details,last_updated,req.params.id],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			message: "Contact Details Updated!"
+		});
+	});
+};
+
+/**DELETE CONTACT DETAILS PER ID**/
+exports.deleteContact = (req, res, next) => {
+	if(!req.params.id){ return next(new appError("No Contact Details Found!", 404));}
+	conn.query("DELETE FROM contact WHERE id=?",[req.params.id],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			message: "Contact Details Deleted!"
+		});
+	});
+};
+/**END CONTACT TABLE**/
+
+/**START TESTIMONY TABLE**/
+/**GET ALL TESTIMONY**/
+exports.getAllTestimony = (req, res, next) => {
+	conn.query("SELECT * FROM testimony",
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(200).json({
+			status: "success",
+			length:data?.length,
+			data:data
+		});
+	});
+};
+
+/**INSERT TESTIMONY DETAILS**/
+exports.createTestimony = (req, res, next) => {
+	if(!req.body) return next(new appError("No Form Data Found!", 404));
+	const company = req.body.company;
+	const name = req.body.name;
+	const position = req.body.position;
+	const content = req.body.content;
+	const entry_date = req.body.entry_date;
+	conn.query("INSERT INTO testimony(company,name,position,content,entry_date) VALUES(?,?,?,?)",
+	[company,name,position,content,entry_date],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			message: "Testimony Created!"
+		});
+	});
+};
+
+/**GET TESTIMONY PER ID**/
+exports.getTestimony = (req, res, next) => {
+	if(!req.params.id){ return next(new appError("No Testimony Details Found!", 404));}
+	conn.query("SELECT * FROM testimony WHERE id=?",[req.params.id],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			length: data?.length,
+			data:data
+		});
+	});
+};
+
+/**UPDATE TESTIMONY PER ID**/
+exports.updateTestimony = (req, res, next) => {
+	if(!req.params.id){ return next(new appError("No Testimony Details Found!", 404));}
+	const company = req.body.company;
+	const name = req.body.name;
+	const position = req.body.position;
+	const content = req.body.content;
+	const last_updated = req.body.last_updated;
+	conn.query("UPDATE testimony SET company=?,name=?,position=?,content=?,last_updated=?",
+	[company,name,position,content,last_updated,req.params.id],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			message: "Testimony Details Updated!"
+		});
+	});
+
+};
+
+/**DELETE TESTIMONY DETAILS PER ID**/
+exports.deleteTestimony = (req, res, next) => {
+	if(!req.params.id){ return next(new appError("No Testimony Details Found!",404));}
+	conn.query("DELETE FROM testimony WHERE id=?",[req.params.id],
+	function(err, data, fields){
+		if(err) return next(new appError(err, 500));
+		res.status(201).json({
+			status: "success",
+			message: "Testimony Detail Deleted!"
+		});
+	});
+};
+/**END TESTIMONY TABLE**/
+
+/**START USER LOGIN**/
+
+/**END USER LOGIN**/
+
+/**START USER LOG OUT**/
+
+/**END USER LOG OUT**/
 

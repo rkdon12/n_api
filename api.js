@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const cookieParser =require('cookie-parser');
 const router = require('./routes/routers');
 const appError = require("./utils/appError");
 const errorHandler = require('./utils/errorHandler');
@@ -21,8 +22,8 @@ app.all("**", (req, res, next) => {
 });
 
 app.listen(port, () =>{
-	console.log(`Api Server on port ${ port }`)
-})
+	console.log(`Api Server on port ${ port }`);
+});
 
 
 module.exports = app;
