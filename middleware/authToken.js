@@ -9,7 +9,7 @@ function verifyToken(req, res, next){
     var authHeader = req.headers['x-access-token'];
     var token = authHeader && authHeader.startWith('Bearer') && authHeader.split(" ")[1];
     if(token == null) return next(new appError(403));
-    jwt.verify(token, "eyJhbGci0k8ygr3LoZlpVB7T", (err, user) => {
+    jwt.verify(token, "eyJhbGci0k8ygr3LoZlpVB7TBzl!uJL1S*breWLdu@2abRAsiDi", (err, user) => {
         if(err) return next(new appError(err,404));
         req.user = user;
         next();

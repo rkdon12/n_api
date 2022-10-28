@@ -4,6 +4,12 @@ var appError = require('../utils/appError');
 var conn = require('../service/db');
 var jwt = require('jsonwebtoken');
 var bcrypt = require('bcryptjs');
+var JWT_SECRET = 'eyJhbGci0k8ygr3LoZlpVB7TBzl!uJL1S*breWLdu@2abRAsiDi';
+//Default Date Format Setup
+/*var date = new Date();
+let day = date.getDate();
+let month = date.getMonth() + 1;
+let year = date.getFullYear();*/
 
 
 /**START ROLES**/
@@ -23,7 +29,7 @@ exports.getAllRoles = (req, res, next) => {
 exports.createRoles = (req, res, next) => {
 	if(!req.body) return next(new appError("No Form Data Found", 404));
 	var role_name = req.body.role_name;
-	var entry_date = req.body.entry_date;
+	var entry_date = new Date().toJSON().slice(0,10);
 	conn.query("INSERT INTO roles(role_name,entry_date) VALUES(?,?)",
 		[role_name, entry_date],
 		function(err, data, fields){
@@ -59,7 +65,7 @@ exports.updateRole = (req, res, next) => {
 		return next(new appError("No Role Details Found", 404));
 	}
 	var role_name = req.body.role_name;
-	var last_updated = req.body.last_updated;
+	var last_updated = new Date().toJSON().slice(0,10);
 	conn.query("UPDATE roles SET role_name=?, last_updated=? WHERE role_id=?", [role_name, last_updated, req.params.id],
 		function(err, data, fields){
 			if(err) return next(new appError(err, 500));
@@ -111,18 +117,31 @@ exports.getAllUsers = (req, res, next) => {
 
 
 /**ADD USERS**/
-exports.createUser = (req, res, next) =>{
+exports.createUser = async (req, res, next) =>{
 	if(!req.body) return next(new appError("No Form Data Found", 404));
 	var username = req.body.username;
 	var full_name = req.body.full_name;
-	var passwordHash = bcrypt.hash(req.body.passwordHash);
+	var salt = await bcrypt.genSalt(10);
+	var passwordHash = await bcrypt.hash(req.body.passwordHash, salt);
 	var email = req.body.email;
 	var role_id = req.body.role_id;
 	var active_status = req.body.active_status;
-	var activation_code = req.body.activation_code;
-	var password_expiry = req.body.password_expiry;
-	var entry_date = req.body.entry_date;
-	var secret_key="eyJhbGci0k8ygr3LoZlpVB7T";
+	//Default Serial Number Setup
+    var chars = '123456789QBCDEFGHIJKLMNOPQRSTUVWXYZ';
+    var serialLength = 6;
+    var i;
+    var randomSerial="";
+    var randomNumber; 
+    for(i = 0; i < serialLength; i = i + 1){
+	  randomNumber= Math.floor(Math.random() * chars.length);
+      randomSerial += chars.substring(randomNumber, randomNumber + 1);
+    } 
+	var activation_code = randomSerial;
+	//Default Future Date Setup
+	var date= new Date();
+    date.setMonth(date.getMonth() +6)
+	var password_expiry = date;
+	var entry_date = new Date().toJSON().slice(0,10);
 	conn.query(
 		"INSERT INTO users(username,full_name,passwordHash,email,role_id,active_status,activation_code,password_expiry,entry_date) VALUES(?,?,?,?,?,?,?,?,?)",
 		[username,full_name,passwordHash,email,role_id,active_status,activation_code,password_expiry,entry_date],
@@ -131,13 +150,8 @@ exports.createUser = (req, res, next) =>{
 			res.status(201).json({
 				status: "success",
 				message: "User Created!",
+				token: jwt.sign({user:username, password:passwordHash, email:email, name:full_name}, JWT_SECRET, {expiresIn: "60days"})	
 			});
-			/*var token = jwt.sign(
-				{username,passwordHash,email,secret_key},
-				{ expiresIn: "2h"}
-			);
-			user.token = token;
-			console.log(user);*/
 		}
 	);
 	
@@ -175,7 +189,7 @@ exports.updateUser = (req, res, next) =>{
 	var role_id = req.body.role_id;
 	var active_status = req.body.active_status;
 	var password_expiry = req.body.password_expiry;
-	var last_updated = req.body.last_updated;
+	var last_updated = new Date().toJSON().slice(0,10);
 	conn.query(
 		"UPDATE users SET username=?,full_name=?,passwordHash=?,email=?,role_id=?,active_status=?,password_expiry=?,last_updated=? WHERE id=?",
 		[username,full_name,passwordHash,email,role_id,active_status,password_expiry,last_updated,req.params.id],
@@ -225,7 +239,7 @@ exports.createBio = (req, res, next) => {
 	if(!req.body) return next(new appError("No Form Data Found", 404));
 	var title = req.body.title;
 	var details = req.body.details;
-	var entry_date = req.body.entry_date;
+	var entry_date = new Date().toJSON().slice(0,10);
 	conn.query("INSERT INTO bio(title,details,entry_date) VALUES(?,?,?)",
 		[title,details,entry_date], 
 		function(err, data, fields){
@@ -262,7 +276,7 @@ exports.updateBio = (req, res, next) => {
 	}
 	var title = req.body.title;
 	var details = req.body.details;
-	var last_updated = req.body.last_updated;
+	var last_updated = new Date().toJSON().slice(0,10);
 	conn.query("UPDATE bio SET title=?,details=?,last_updated=? WHERE id=?",
 	[title,details,last_updated,req.params.id],
 		function(err, data, fields){
@@ -313,7 +327,7 @@ exports.createCore = (req, res, next) => {
 	if(!req.body) return next(new appError("No Form Data Found", 404));
 	var title = req.body.title;
 	var details = req.body.details;
-	var entry_date = req.body.entry_date;
+	var entry_date = new Date().toJSON().slice(0,10);
 	conn.query("INSERT INTO cores(title,details,entry_date) VALUES(?,?,?)", 
 	[title,details,entry_date], 
 	function(err, data, fields){
@@ -349,7 +363,7 @@ exports.updateCore = (req, res, next) =>{
 	}
 	var title = req.body.title;
 	var details = req.body.details;
-	var last_updated = req.body.last_updated;
+	var last_updated = new Date().toJSON().slice(0,10);
 	conn.query("UPDATE cores SET title=?,details=?,last_updated=? WHERE id=?",
 	[title,details,last_updated,req.params.id],
 	function(err, data, fields){
@@ -396,7 +410,7 @@ exports.createService = (req, res, next) => {
 	if(!req.body) return next(new appError("No Form Data Found", 404));
 	var service_type = req.body.service_type;
 	var content = req.body.content;
-	var entry_date = req.body.entry_date;
+	var entry_date = new Date().toJSON().slice(0,10);
 	conn.query("INSERT INTO services(service_type,content,entry_date) VALUES(?,?,?)",
 	[service_type,content,entry_date],
 	function(err, data, fields){
@@ -433,7 +447,7 @@ exports.updateService = (req, res, next) => {
 	}
 	var service_type =req.body.service_type;
 	var content = req.body.content;
-	var last_updated = req.body.last_updated;
+	var last_updated = new Date().toJSON().slice(0,10);
 	conn.query("UPDATE services SET service_type=?,content=?,last_updated=? WHERE id=?",
 	[service_type,content,last_updated,req.params.id],
 	function(err, data, fields){
@@ -482,7 +496,7 @@ exports.createSocial = (req, res, next) => {
 	var social_type = req.body.social_type;
 	var slink = req.body.slink;
 	var social_icon = req.body.social_icon;
-	var entry_date = req.body.entry_date;
+	var entry_date = new Date().toJSON().slice(0,10);
 	conn.query("INSERT INTO social(social_type,slink,social_icon,entry_date) VALUES(?,?,?,?)",
 	[social_type,slink,social_icon,entry_date],
 	function(err, data, fields){
@@ -518,7 +532,7 @@ exports.updateSocial = (req, res, next) => {
 	var social_type = req.body.social_type;
 	var slink = req.body.slink;
 	var social_icon = req.body.social_icon;
-	var last_updated = req.body.last_updated;
+	var last_updated = new Date().toJSON().slice(0,10);
 	conn.query("UPDATE social SET social_type=?,slink=?,social_icon=?,last_updated=? WHERE id=?",
 	[social_type,slink,social_icon,last_updated,req.params.id],
 	function(err, data, fields){
@@ -566,7 +580,7 @@ exports.createSlide = (req, res, next) => {
 	var slides_title = req.body.slides_title;
 	var slides_img =req.body.slides_img;
 	var slides_content =req.body.slides_content;
-	var entry_date = req.body.entry_date;
+	var entry_date = new Date().toJSON().slice(0,10);
 	conn.query("INSERT INTO slides(slides_title,slides_img,slides_content,entry_date)",
 	[slides_title,slides_img,slides_content,entry_date], 
 	function(err, data, fields){
@@ -601,7 +615,7 @@ exports.updateSlide = (req, res, next) => {
 	var slides_title = req.body.slides_title;
 	var slides_img = req.body.slides_img;
 	var slides_content = req.body.slides_content;
-	var last_updated = req.body.last_updated;
+	var last_updated = new Date().toJSON().slice(0,10);
 	conn.query("UPDATE slides SET slides_title=?,slides_img=?,slides_content=?,last_updated=? WHERE id=?",
 	[slides_title,slides_img,slides_content,last_updated,req.params.id],
 	function(err, data, fields){
@@ -647,7 +661,7 @@ exports.createNews = (req, res, next) => {
 	if(!req.body) return next(new appError("No Form Data Found!", 404));
 	var news_type = req.body.news_type;
 	var content = req.body.content;
-	var entry_date = req.body.entry_date;
+	var entry_date = new Date().toJSON().slice(0,10);
 	conn.query("INSERT INTO news(news_type,content,entry_date) VALUES(?,?,?)",
 	[news_type,content,entry_date],
 	function(err, data, fields){
@@ -666,7 +680,7 @@ exports.updateNews = (req, res, next) => {
 	}
 	var news_type = req.body.news_type;
 	var content = req.body.content;
-	var last_updated = req.body.last_updated;
+	var last_updated = new Date().toJSON().slice(0,10);
 	conn.query("UPDATE news SET news_type=?,content=?,last_updated=? WHERE id=?",
 	[news_type,content,last_updated,req.params.id],
 	function(err, data, fields){
@@ -732,7 +746,7 @@ exports.createContact = (req, res, next) => {
 	var contact_type = req.body.contact_type;
 	var contact_icon = req.body.contact_icon;
 	var contact_details = req.body.contact_details;
-	var entry_date = req.body.entry_date;
+	var entry_date = new Date().toJSON().slice(0,10);
 	conn.query("INSERT INTO contact(contact_type,contact_icon,contact_details,entry_Date) VALUES(?,?,?,?)",
 	[contact_type,contact_icon,contact_details,entry_date],
 	function(err, data, fields){
@@ -768,7 +782,7 @@ exports.updateContact = (req, res, next) => {
 	var contact_type = req.body.contact_type;
 	var contact_icon = req.body.contact_icon;
 	var contact_details = req.body.contact_details;
-	var last_updated = req.body.last_updated;
+	var last_updated = new Date().toJSON().slice(0,10);
 	conn.query("UPDATE contact SET contact_type=?,contact_icon=?,contact_details=?,last_updated=? WHERE id=?",
 	[contact_type,contact_icon,contact_details,last_updated,req.params.id],
 	function(err, data, fields){
@@ -817,7 +831,7 @@ exports.createTestimony = (req, res, next) => {
 	var name = req.body.name;
 	var position = req.body.position;
 	var content = req.body.content;
-	var entry_date = req.body.entry_date;
+	var entry_date = new Date().toJSON().slice(0,10);
 	conn.query("INSERT INTO testimony(company,name,position,content,entry_date) VALUES(?,?,?,?)",
 	[company,name,position,content,entry_date],
 	function(err, data, fields){
@@ -854,7 +868,7 @@ exports.updateTestimony = (req, res, next) => {
 	var name = req.body.name;
 	var position = req.body.position;
 	var content = req.body.content;
-	var last_updated = req.body.last_updated;
+	var last_updated = new Date().toJSON().slice(0,10);
 	conn.query("UPDATE testimony SET company=?,name=?,position=?,content=?,last_updated=?",
 	[company,name,position,content,last_updated,req.params.id],
 	function(err, data, fields){
@@ -888,29 +902,37 @@ exports.login = async (req, res, next) => {
 	if(!req.body) return next(new appError("No Form Data Found!",404));
 	var username = req.body.username;
 	var passwordHash = req.body.passwordHash;
-	//var secret_key="eyJhbGci0k8ygr3LoZlpVB7T";
-	conn.query("SELECT * FROM users WHERE username=? and passwordHash=?",
+	conn.query("SELECT *,role_name FROM users,roles WHERE users.role_id=roles.role_id and username=? and passwordHash=?",
 	[username,passwordHash],
 	function(err, result, data, fields, user){
+		res.cookie('Epanel',JWT_SECRET, {maxAge:90000, httpOnly: true });
+		req.session.jwt = JWT_SECRET;
 		if(err) return next(new appError(err,500));
-		if(!result.length) return next(new appError("Email or Password incorrect",404));
+		if(!result.length) return next(new appError("Username or Password incorrect",404));
 		res.status(201).json({
 			status: "success",
 			message: "User Logged in!",
-			///token:token				
+			token: jwt.sign({user:username}, JWT_SECRET)
+			///data:data			
 		});
-		/*var token = jwt.sign(
-			{username, secret_key},
-			{ expiresIn: "2h"},
-		);*/
+		
 	});
 
 };
 /**END USER LOGIN**/
 
 /**START USER LOG OUT**/
-exports.logout = (req, res, next) => {
-	var ss =req.session.user;
+exports.logout = async  (req, res, next) => {
+   var sess = req.session;
+   if(sess){
+   	  res.session = null;
+	  res.clearCookie('Epanel');
+	  res.status(200).json({
+		status: 'success',
+		message: 'User Logged Out!',
+		token: null
+	  });
+    }
 };
 /**END USER LOG OUT**/
 

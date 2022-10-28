@@ -71,12 +71,13 @@ router.route("/deletecontact/:id", verifyToken).delete(controller.deleteContact)
 /**START TESTIMONY ROUTERS**/
 router.route("/testimonies", verifyToken).get(controller.getAllTestimony);
 router.route("/createtestimony", verifyToken).post(controller.createTestimony);
-router.route("/gettestimony/:id",  verifyToken).get(controller.getTestimony);
-router.route("/updatetestimony/:id",  verifyToken).put(controller.updateTestimony);
+router.route("/gettestimony/:id", verifyToken).get(controller.getTestimony);
+router.route("/updatetestimony/:id", verifyToken).put(controller.updateTestimony);
 router.route("/deletetestimony/:id", verifyToken).delete(controller.deleteTestimony);
 /**END TESTIMONY ROUTERS**/
 /**START USER LOGIN ROUTERS**/
 router.route("/login").post(controller.login);
+router.route("/logout", verifyToken).post(controller.logout);
 /**END USER LOGIN ROUTERS**/
 /**START USER LOGOUT ROUTERS**/
 /**END USER LOGOUT ROUTERS**/
